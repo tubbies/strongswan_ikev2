@@ -1,4 +1,8 @@
 # strongswan_ikev2
+## Install Programs
+- sudo apt install strongswan netfilter-persistent strongswan-pki ufw 
+- (verified with Debian 9)
+
 ## Fix run.bash
 - Fix CN field in line 18
 - Fix --san field in line 19-20

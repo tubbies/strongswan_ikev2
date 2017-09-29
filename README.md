@@ -4,6 +4,10 @@
 - sudo apt-get install strongswan strongswan-plugin-eap-mschapv2 moreutils iptables-persistent 
 - ( For Ubuntu 16.04)
 
+ libcharon-extra-plugins libio-pty-perl libipc-run-perl libpcsclite1
+  libstrongswan libtspi1 netfilter-persistent strongswan-charon
+  strongswan-libcharon strongswan-starter strongswan-tnc-base???
+
 ## Fix run.bash
 - Fix CN field in line 18
 - Fix --san field in line 19-20

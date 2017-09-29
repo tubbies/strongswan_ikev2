@@ -1,8 +1,8 @@
 # strongswan_ikev2
 ## Install Programs
 - sudo apt install strongswan netfilter-persistent strongswan-pki ufw libcharon-extra-plugins moreutils strongswan-ikev2
-- sudo apt-get install strongswan strongswan-plugin-eap-mschapv2 moreutils iptables-persistent 
-- ( For Ubuntu 16.04)
+- sudo apt-get install strongswan strongswan-plugin-eap-mschapv2 moreutils iptables-persistent strongswan-plugin-openssl
+- ( For Ubuntu 16.04.3)
 
  libcharon-extra-plugins libio-pty-perl libipc-run-perl libpcsclite1
   libstrongswan libtspi1 netfilter-persistent strongswan-charon

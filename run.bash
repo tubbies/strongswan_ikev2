@@ -26,7 +26,7 @@ chown root /etc/ipsec.d/private/vpn-server-key.pem
 chgrp root /etc/ipsec.d/private/vpn-server-key.pem
 chmod 600 /etc/ipsec.d/private/vpn-server-key.pem
 
-
+ openssl pkcs12 -export -out server-root-ca.p12 -in vpn-server-cert.pem -inkey vpn-server-key.pem -certfile server-root-ca.pem
 
 ############
 cp /etc/ipsec.conf    /etc/ipsec.conf.original_${DATE}

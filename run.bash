@@ -56,7 +56,7 @@ ufw allow OpenSSH
 ufw enable
 ufw allow 500,4500/udp
 cp /etc/ufw/before.rules /etc/ufw/before.rules_${DATE}
-sed -i -e 's@*filter@*nat\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -m policy --pol ipsec --dir out -j ACCEPT\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -j MASQUERADE\nCOMMIT\n\n*mangle\n-A FORWARD --match policy --pol ipsec --dir in -s 10.10.10.0/24 -o '${NAT_ADPT}' -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1361:1536 -j TCPMSS --set-mss 1360\n\n*filter@' /etc/ufw/before.rules
+sed -i -e 's@*filter@*nat\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -m policy --pol ipsec --dir out -j ACCEPT\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -j MASQUERADE\nCOMMIT\n\n*mangle\n-A FORWARD --match policy --pol ipsec --dir in -s 10.10.10.0/24 -o '${NAT_ADPT}' -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1361:1536 -j TCPMSS --set-mss 1360\nCOMMIT\n\n*filter@' /etc/ufw/before.rules
 sed -i -e 's@# End required lines@# End required lines\n\n-A ufw-before-forward --match policy --pol ipsec --dir in  --proto esp -s 10.10.10.0/24 -j ACCEPT\n-A ufw-before-forward --match policy --pol ipsec --dir out --proto esp -d 10.10.10.0/24 -j ACCEPT@' /etc/ufw/before.rules
 cp /etc/sysctl.conf sysctl_backup_${DATE}.conf
 echo "net.ipv4.ip_forward = 1"                          |  tee -a /etc/sysctl.conf

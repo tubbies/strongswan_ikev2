@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-16-04
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-an-ikev2-vpn-server-with-strongswan-on-ubuntu-18-04-2
+
 DATE=`date +%Y%m%d_%H%M%S`
 ADDR=xxxxxxxxxxxxxx        #TODO: Fix this
 IP_ADR=xxx.xxx.xxx.xxx     #TODO: Fix this
 NAT_ADPT=eth0              #TODO: Fix this
 ID=user_id                 #TODO: Fix this
-PASSWD=user_pwd            #TODO: Fix this
+PASSWD=user_passwd         #TODO: Fix this
 
 
 ipsec pki --gen --type rsa --size 4096 --outform pem > server-root-key.pem
@@ -40,7 +41,7 @@ cp /etc/ipsec.secrets /etc/ipsec.secrets.original_${DATE}
 cp -rf ref ref_original_${DATE}
 
 sed -i -e 's@server_url_or_ip_address@'${ADDR}'@g' ref/ipsec.conf
-sed -i -e 's@server_url_or_ip_address@'${ADDR}'@g' ref/ipsec.secrets
+#sed -i -e 's@server_url_or_ip_address@'${ADDR}'@g' ref/ipsec.secrets
 sed -i -e 's@user_id@'${ID}'@g'                    ref/ipsec.secrets
 sed -i -e 's@user_passwd@'${PASSWD}'@g'            ref/ipsec.secrets
 
@@ -48,42 +49,19 @@ echo '' | tee /etc/ipsec.conf
 cp ref/ipsec.conf /etc/ipsec.conf
 echo '' | tee /etc/ipsec.secrets
 cp ref/ipsec.secrets /etc/ipsec.secrets
-ipsec reload
+# ipsec reload
+systemctl restart strongswan
 
-
-#################
-ufw disable
-iptables -P INPUT ACCEPT
-iptables -P FORWARD ACCEPT
-iptables -F
-iptables -Z
-iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-iptables -A INPUT -p tcp --dport 21 -j ACCEPT
-iptables -A INPUT -p tcp --dport 20 -j ACCEPT
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A INPUT -p tcp --dport 443  -j ACCEPT
-iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
-iptables -A INPUT -p tcp --dport 2000:3000 -j ACCEPT
-iptables -A INPUT -i lo -j ACCEPT
-iptables -A INPUT -p udp --dport  500 -j ACCEPT
-iptables -A INPUT -p udp --dport 4500 -j ACCEPT
-iptables -A FORWARD --match policy --pol ipsec --dir in  --proto esp -s 10.10.10.10/24 -j ACCEPT
-iptables -A FORWARD --match policy --pol ipsec --dir out --proto esp -d 10.10.10.10/24 -j ACCEPT
-iptables -t nat -A POSTROUTING -s 10.10.10.10/24 -o ${NAT_ADPT} -m policy --pol ipsec --dir out -j ACCEPT
-iptables -t nat -A POSTROUTING -s 10.10.10.10/24 -o ${NAT_ADPT} -j MASQUERADE
-iptables -t mangle -A FORWARD --match policy --pol ipsec --dir in -s 10.10.10.10/24 -o ${NAT_ADPT} -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1361:1536 -j TCPMSS --set-mss 1360
-iptables -A INPUT -j DROP
-iptables -A FORWARD -j DROP
-netfilter-persistent save
-netfilter-persistent reload
-
-###################
+ufw allow OpenSSH
+ufw enable
+ufw allow 500,4500/udp
+cp /etc/ufw/before.rules /etc/ufw/before.rules_${DATE}
+sed -i -e 's@*filter@*nat\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -m policy --pol ipsec --dir out -j ACCEPT\n-A POSTROUTING -s 10.10.10.0/24 -o '${NAT_ADPT}' -j MASQUERADE\nCOMMIT\n\n*mangle\n-A FORWARD --match policy --pol ipsec --dir in -s 10.10.10.0/24 -o '${NAT_ADPT}' -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1361:1536 -j TCPMSS --set-mss 1360\n\n*filter@' /etc/ufw/before.rules
+sed -i -e 's@# End required lines@# End required lines\n\n-A ufw-before-forward --match policy --pol ipsec --dir in  --proto esp -s 10.10.10.0/24 -j ACCEPT\n-A ufw-before-forward --match policy --pol ipsec --dir out --proto esp -d 10.10.10.0/24 -j ACCEPT@' /etc/ufw/before.rules
 cp /etc/sysctl.conf sysctl_backup_${DATE}.conf
 echo "net.ipv4.ip_forward = 1"                          |  tee -a /etc/sysctl.conf
 echo "net.ipv4.conf.all.accept_redirects = 0"           |  tee -a /etc/sysctl.conf
 echo "net.ipv4.conf.all.send_redirects = 0"             |  tee -a /etc/sysctl.conf
 echo "net.ipv4.ip_no_pmtu_disc = 1"                     |  tee -a /etc/sysctl.conf
-
-sysctl -p
-
+ufw disable
+ufw enable
